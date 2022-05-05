@@ -1,0 +1,133 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.meituan.catering.management.shop.dao.mapper.ShopMapper">
+    <resultMap id="BaseResultMap" type="com.meituan.catering.management.shop.dao.model.ShopDO">
+        <id column="businessNo" jdbcType="BIGINT" property="businessNo"></id>
+        <result column="tenantId" jdbcType="VARCHAR" property="tenantId"></result>
+        <result column="shopName" jdbcType="VARCHAR" property="shopName"></result>
+        <result column="businessType" jdbcType="INTEGER" property="businessType"></result>
+        <result column="managementType" jdbcType="INTEGER" property="managementType"></result>
+        <result column="contact" jdbcType="VARCHAR" property="contact"></result>
+        <result column="openingHours" jdbcType="VARCHAR" property="openingHours"></result>
+        <result column="businessArea" jdbcType="VARCHAR" property="businessArea"></result>
+        <result column="comment" jdbcType="VARCHAR" property="comment"></result>
+        <result column="enabled" jdbcType="BOOLEAN" property="enabled"></result>
+    </resultMap>
+    <sql id="Base_Column_List">
+        businessNo
+        ,tenantId,shopName,businessType,managementType,contact,
+        openingHours,businessArea,comment,enabled
+    </sql>
+    <!--按分页条件搜索总条数-->
+    <select id="findAllCount" resultType="java.lang.Integer">
+        select count(*)
+        from shop
+        <where>
+            <if test="condition.keysLike !=null">
+                shopName LIKE #{condition.keysLike}
+                or
+                json_extract(contact, '$."name"','$."address"','$."cellphone"','$."telephone"') LIKE
+                #{condition.keysLike}
+            </if>
+            <if test="accurate.businessType != null">
+                and businessType=#{accurate.businessType}
+            </if>
+            <if test="accurate.managementType != null">
+                and managementType=#{accurate.managementType}
+            </if>
+            <if test="accurate.enabled != null">
+                and enabled=#{accurate.enabled}
+            </if>
+        </where>
+    </select>
+    <!--按分页条件搜索所有数据-->
+    <select id="findAll" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"></include>
+        from shop
+        <where>
+            <if test="condition.keysLike !=null">
+                shopName LIKE #{condition.keysLike}
+                or
+                json_extract(contact, '$."name"','$."address"','$."cellphone"','$."telephone"') LIKE
+                #{condition.keysLike}
+            </if>
+            <if test="accurate.businessType != null">
+                and businessType=#{accurate.businessType}
+            </if>
+            <if test="accurate.managementType != null">
+                and managementType=#{accurate.managementType}
+            </if>
+            <if test="accurate.enabled != null">
+                and enabled=#{accurate.enabled}
+            </if>
+        </where>
+        <if test="orderBy !=null">
+            order by
+            <foreach collection="orderBy" item="orderByItem" separator=",">
+                ${orderByItem.field} ${orderByItem.direction}
+            </foreach>
+        </if>
+        <if test="page.skip !=null and page.limit != null">
+            limit #{page.skip},#{page.limit}
+        </if>
+    </select>
+    <!--根据商铺号查询商铺信息-->
+    <select id="findByBusinessNo" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"></include>
+        from shop
+        where businessNo=#{businessNo};
+    </select>
+    <!--添加商铺-->
+    <insert id="creatShop">
+        INSERT INTO shop (`tenantId`, `businessNo`, `shopName`, `businessType`, `managementType`, `contact`,
+                          `businessArea`, `openingHours`, `comment`, `enabled`)
+        VALUES (#{tenantId}, #{businessNo}, #{shopName}, #{businessType}, #{managementType}, #{contact},
+                #{businessArea}, #{openingHours}, #{comment}, #{enabled})
+    </insert>
+    <!--更新商铺信息-->
+    <update id="updateShop">
+        update shop
+        <set>
+            <if test="tenantId!=null">
+                tenantId=#{tenantId},
+            </if>
+            <if test="shopName!=null">
+                shopName=#{shopName},
+            </if>
+            <if test="businessType!=null">
+                businessType=#{businessType},
+            </if>
+            <if test="managementType!=null">
+                managementType=#{managementType},
+            </if>
+            <if test="contact!=null">
+                contact=#{contact},
+            </if>
+            <if test="businessArea!=null">
+                businessArea=#{businessArea},
+            </if>
+            <if test="openingHours!=null">
+                openingHours=#{openingHours},
+            </if>
+            <if test="comment!=null">
+                comment=#{comment},
+            </if>
+            <if test="enabled!=null">
+                enabled=#{enabled}
+            </if>
+        </set>
+        where
+        businessNo=#{businessNo}
+    </update>
+    <!--根据商铺号查询联系人信息和营业信息-->
+    <select id="searchJson" resultType="com.meituan.catering.management.shop.biz.model.response.ContactBizResponse">
+        select contact, openingHours
+        from shop
+        where businessNo = #{businessNo};
+    </select>
+
+
+</mapper>
